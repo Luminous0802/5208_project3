@@ -1,0 +1,36 @@
+{
+  "record_type": "LOCAL_PACKAGING_CHECK_ONLY",
+  "recorded_utc": "2026-11-06T09:24:45.678619+00:00",
+  "measurement_site": "Vanda",
+  "job_id": "1520880.stdct-mgmt-02",
+  "files": [
+    {
+      "original_filename": "runs.csv",
+      "package_path": "runs.csv",
+      "sha256": "19f7b5909d5b61fe76898936a670a5b5e9e4f949ad29dbbf4242ac193d82a4b2",
+      "bytes": 129251,
+      "byte_identical_to_user_input": true
+    },
+    {
+      "original_filename": "summary.csv",
+      "package_path": "summary.csv",
+      "sha256": "81c46dd6cddfec4f8a0a0ddbec4ebfd31867e1c628eb6912ea2c023e3144e4df",
+      "bytes": 28783,
+      "byte_identical_to_user_input": true
+    }
+  ],
+  "checks": {
+    "raw_runs": 210,
+    "summary_configurations": 42,
+    "repetitions_per_configuration": 5,
+    "unique_run_ids": true,
+    "summary_statistics_match_raw_csv": true,
+    "recorded_speedups_match_within_job_baselines": true,
+    "all_selected_graph_hashes_match_B_catalog": true,
+    "source_sha256_matches_current_src": true,
+    "all_rows_fixed_K_50": true,
+    "rank_sum_and_recorded_vector_errors_within_threshold": true
+  },
+  "source_sha256": "f26a06b566faffa44574b2357d0db26aa423379a6b28b8488d62c9ad31ab9800",
+  "scope": "CSV and hash checks only. No solver, benchmark, remote validation or plotting was run. Original GPU metadata, validation JSON, binding logs and PBS records were not supplied in this import; they are not reconstructed from the CSV."
+}

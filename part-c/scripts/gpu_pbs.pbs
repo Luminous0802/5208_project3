@@ -1,0 +1,28 @@
+#!/bin/bash
+#PBS -l select=1:ncpus=12:mpiprocs=12:ngpus=1:mem=20gb
+#PBS -l walltime=02:00:00
+#PBS -j oe
+# Generic PBS resource example, NOT a verified Atlas/Vanda GPU queue request.
+# Add actual queue/account and GPU resource syntax supplied by the site.
+set -euo pipefail
+cd "$PBS_O_WORKDIR"
+: "${HPC_SITE:?Set Atlas or Vanda}"
+: "${HARDWARE_TAG:?Set actual CPU/GPU node type}"
+: "${GPU_MANIFEST:?Set the graph manifest path}"
+if [[ -n "${HPC_GPU_MODULES:-}" ]]; then read -r -a mods <<< "$HPC_GPU_MODULES"; module load "${mods[@]}"; fi
+job=${PBS_JOBID%%.*}
+result_dir="$PWD/results/${HPC_SITE}_gpu_${job}"
+mkdir -p "$result_dir"
+export BIN_DIR="$PWD/work/gpu_build_${job}/bin"
+export VALIDATION_OUT="$result_dir/validation"
+# CUDA_VISIBLE_DEVICES is left exactly as assigned by the scheduler.
+bash scripts/gpu_preflight.sh > "$result_dir/preflight.log" 2>&1
+extra=()
+if [[ -n "${GPU_HYBRID_CONFIGS:-}" ]]; then
+  : "${GPU_CPU_CORES:?Set actual allocated cores, at most the PBS ncpus request}"
+  : "${MPIEXEC_ARGS:?Set explicit rank/thread binding, e.g. the B OpenMPI mapping}"
+  extra=(--hybrid-configs "$GPU_HYBRID_CONFIGS" --cpu-cores "$GPU_CPU_CORES")
+fi
+python3 scripts/benchmark_gpu.py "$GPU_MANIFEST" --out "$result_dir" --bin-dir "$BIN_DIR" \
+  --site "$HPC_SITE" --hardware-tag "$HARDWARE_TAG" --repeats 5 --K 50 --block-sizes "${BLOCK_SIZES:-256}" "${extra[@]}"
+python3 scripts/analyze_gpu.py "$result_dir/runs.csv" --out "$result_dir/summary.csv" --plot-dir "$result_dir/plots"

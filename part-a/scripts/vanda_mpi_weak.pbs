@@ -1,0 +1,78 @@
+#!/bin/bash
+#PBS -N pr_mpi_weak
+#PBS -q auto
+#PBS -l walltime=01:00:00
+#PBS -j oe
+
+set -euo pipefail
+cd "$PBS_O_WORKDIR"
+module load openmpi/gcc/64/4.1.8
+
+: "${RANKS:?RANKS was not supplied}"
+
+allocated=$(wc -l < "$PBS_NODEFILE")
+if [[ "$allocated" -ne "$RANKS" ]]; then
+    echo "Allocated $allocated MPI slots; requested $RANKS" >&2
+    exit 1
+fi
+
+N=$((5000 * RANKS))
+E=$((40000 * RANKS))
+SEED=20261029
+graph="weak_graph_${N}_${E}_seed${SEED}.txt"
+csv="mpi_weak_${RANKS}_${PBS_JOBID%%.*}.csv"
+hostfile="mpi_hosts_${PBS_JOBID%%.*}.txt"
+mpi_prefix=/cm/shared/apps/openmpi4/gcc/4.1.8
+
+if [[ ! -f "$graph" ]]; then
+    temporary="${graph}.tmp.${PBS_JOBID%%.*}"
+    ./make_pilot_graph "$N" "$E" "$SEED" "$temporary"
+    mv "$temporary" "$graph"
+fi
+
+read -r actual_n actual_e < "$graph"
+if [[ "$actual_n" != "$N" || "$actual_e" != "$E" ]]; then
+    echo "Graph header mismatch: $graph" >&2
+    exit 1
+fi
+
+sort "$PBS_NODEFILE" | uniq -c |
+    awk '{ print $2 " slots=" $1 }' > "$hostfile"
+
+echo "graph=$graph"
+echo "N=$N E=$E ranks=$RANKS"
+echo "allocated_slots:"
+cat "$hostfile"
+
+echo "ranks,N,E,run,iteration_s,compute_s,allreduce_s,allgatherv_s,edge_imbalance,rank_sum,residual" > "$csv"
+
+for run in 1 2 3 4 5; do
+    result=$(
+        "$mpi_prefix/bin/mpirun" \
+            --prefix "$mpi_prefix" \
+            --hostfile "$hostfile" \
+            -np "$RANKS" \
+            ./pagerank_mpi "$graph" 50
+    )
+
+    printf '%s\n' "$result" |
+        awk -v ranks="$RANKS" -v n="$N" -v e="$E" -v run="$run" '
+            /^iteration_s:/    { total=$2 }
+            /^compute_s:/      { compute=$2 }
+            /^allreduce_s:/    { reduce=$2 }
+            /^allgatherv_s:/   { gather=$2 }
+            /^edge_imbalance:/ { imbalance=$2 }
+            /^rank_sum:/       { rank_sum=$2 }
+            /^residual:/       { residual=$2 }
+            END {
+                if (total == "" || compute == "" || reduce == "" ||
+                    gather == "" || imbalance == "" ||
+                    rank_sum == "" || residual == "") exit 1
+
+                print ranks "," n "," e "," run "," total "," compute "," \
+                      reduce "," gather "," imbalance "," rank_sum "," residual
+            }
+        ' | tee -a "$csv"
+done
+
+echo "result_file=$csv"

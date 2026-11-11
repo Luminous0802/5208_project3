@@ -1,0 +1,65 @@
+#!/bin/bash
+#PBS -N pr_weak_serial
+#PBS -q auto
+#PBS -l select=1:ncpus=1:mem=8gb
+#PBS -l walltime=02:00:00
+#PBS -j oe
+
+set -euo pipefail
+cd "$PBS_O_WORKDIR"
+module load openmpi/gcc/64/4.1.8
+
+if [[ ! -x ./pagerank ]]; then
+    echo "Missing executable: ./pagerank" >&2
+    exit 1
+fi
+
+seed=20261029
+csv="serial_weak_baselines_${PBS_JOBID%%.*}.csv"
+
+# Require the graph files used by the completed MPI weak-scaling jobs.
+for p in 12 24 48 96 192 264; do
+    n=$((5000 * p))
+    e=$((40000 * p))
+    graph="weak_graph_${n}_${e}_seed${seed}.txt"
+    if [[ ! -f "$graph" ]]; then
+        echo "Missing original weak-scaling graph: $graph" >&2
+        exit 1
+    fi
+    read -r actual_n actual_e < "$graph"
+    if [[ "$actual_n" != "$n" || "$actual_e" != "$e" ]]; then
+        echo "Graph header mismatch: $graph" >&2
+        exit 1
+    fi
+done
+
+host=$(hostname)
+echo "hostname=$host"
+echo "P,N,E,seed,run,iteration_s,rank_sum,residual,host" > "$csv"
+
+for p in 12 24 48 96 192 264; do
+    n=$((5000 * p))
+    e=$((40000 * p))
+    graph="weak_graph_${n}_${e}_seed${seed}.txt"
+    echo "graph=$graph"
+
+    for run in 1 2 3 4 5; do
+        result=$(./pagerank "$graph" 50)
+        printf '%s\n' "$result" |
+            awk -v p="$p" -v n="$n" -v e="$e" -v seed="$seed" \
+                -v run="$run" -v host="$host" '
+                /^iteration_s:/ { time=$2 }
+                /^rank_sum:/   { sum=$2 }
+                /^residual:/   { residual=$2 }
+                END {
+                    if (time == "" || sum == "" || residual == "") {
+                        print "Missing PageRank output field" > "/dev/stderr"
+                        exit 1
+                    }
+                    print p "," n "," e "," seed "," run "," time "," sum "," residual "," host
+                }
+            ' | tee -a "$csv"
+    done
+done
+
+echo "result_file=$csv"

@@ -1,0 +1,36 @@
+{
+  "record_type": "LOCAL_SOURCE_AND_CSV_INTEGRATION_ONLY",
+  "job_id": "1536096.stdct-mgmt-02",
+  "files": [
+    {
+      "package_path": "runs.csv",
+      "sha256": "8743227444a272a94a932539c46faa0513bacc44c1224a688c8cb28b95dd8525",
+      "bytes": 213609,
+      "original_bytes_preserved": true
+    },
+    {
+      "package_path": "summary.csv",
+      "sha256": "fb47d9246e344b210700cb31da8c9a4dc713dd2db888bbad781c50766145fe1c",
+      "bytes": 78604,
+      "original_bytes_preserved": true
+    },
+    {
+      "package_path": "validation/comparisons.csv",
+      "sha256": "848c7476b78abfbecf0e2bdeed4e7d8acafa9c79110524f761c8f9089d21f6bb",
+      "bytes": 14919,
+      "original_bytes_preserved": true
+    }
+  ],
+  "source_fingerprint_matches_measurements": true,
+  "scope": "Downloaded original CSVs plus matching supplied source; no new cluster compilation, validation execution, benchmark, or plotting.",
+  "validation_diagnostics_checked_against_matching_source": true,
+  "local_checks": {
+    "python_and_inline_python_syntax": true,
+    "PBS_shell_syntax": true,
+    "make_dependency_dry_run": true,
+    "original_module_summary_reproduced": true,
+    "all_60_summary_rows_checked": true,
+    "source_fingerprint_matches": true,
+    "no_MPI_CUDA_execution": true
+  }
+}

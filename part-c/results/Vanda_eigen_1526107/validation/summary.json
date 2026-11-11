@@ -1,0 +1,47 @@
+{
+  "site": "Vanda",
+  "hostname": "IN-001",
+  "job_id": "1526107.stdct-mgmt-02",
+  "measurement_id": "6d1a7a375b8a4c698ec732b4c2c5bc03",
+  "status": "PASS",
+  "comparisons": 48,
+  "serial_only": false,
+  "operator": "B=(I+S)/2",
+  "checks": [
+    "independent dense residual",
+    "same initial q and one-step Ritz pair",
+    "lazy shift resolves bipartite +/-1 ambiguity",
+    "zero matrix and empty MPI partitions"
+  ],
+  "source_sha256": {
+    "src/lanczos.cpp": "f4d6bbca8a3e347ad45fa8a08c295675d13e172baf49bdc83a1850f7c18814b3",
+    "src/power_symmetric.cpp": "81500e5187d5212178d72ef3957e2d9921266b1bd98b78ef557237c53d57b82c",
+    "src/symmetric.hpp": "46fb992578fbcb50c3046e84a1344959044a8b4aa2197a6b8fa9a55cec4fadc8",
+    "src/graph.hpp": "7d55dbe8a9cc463006e7d401bf959e51f696dc823d8ae7ddda270624f4ddc616"
+  },
+  "binary_sha256": {
+    "power_symmetric": "6ccf11a4f5a2a4d5a94cabb21de56f9d712e0a7b4c6a319a87f5c87f53d7fa7f",
+    "lanczos": "3b064bfd29fbf02511c7a00922ff568e446e33d46542d7ec1cc90ed0d958009f",
+    "power_symmetric_mpi": "b7d9432024cf838729327b12f6c3a8910159ce0aa2af15a731ef807c25a654b8",
+    "lanczos_mpi": "72a641bac0220f18be9c384cfd3e5f319f0ba41d3171569faf8c9317367f91a0"
+  },
+  "MPIEXEC": [
+    "/cm/shared/apps/mpich/ge/gcc/64/4.1.1/bin/mpiexec.hydra",
+    "-rmk",
+    "user",
+    "-launcher",
+    "fork",
+    "-hosts",
+    "localhost",
+    "-bind-to",
+    "core:2"
+  ],
+  "configuration": {
+    "serial_only": false,
+    "site": "Vanda",
+    "bin_dir": "/nfs/home/svu/luminousliu/graph-ranking-eigen/graph-ranking-hpc-c/work/eigen_mpich_build_1526107/bin",
+    "out": "/nfs/home/svu/luminousliu/graph-ranking-eigen/graph-ranking-hpc-c/results/Vanda_eigen_1526107/validation",
+    "work_dir": null,
+    "timeout": 90
+  }
+}

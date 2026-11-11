@@ -1,0 +1,15 @@
+bin/
+work/
+__pycache__/
+*.pyc
+.DS_Store
+results/*
+!results/README.md
+!results/Vanda_eigen_1526107/
+!results/Vanda_gpu_1520880/
+figures/*
+!figures/README.md
+inputs/*
+!inputs/README.md
+
+!results/Vanda_gpu_lanczos_1536096/

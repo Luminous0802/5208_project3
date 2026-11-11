@@ -1,0 +1,12 @@
+.DS_Store
+graph_check
+pagerank
+pagerank_serial
+pagerank_mpi
+make_pilot_graph
+pilot_graph*.txt
+*.o
+.Rhistory
+validate_reference
+pilot_graph*.txt.gz
+weak_graph*.txt

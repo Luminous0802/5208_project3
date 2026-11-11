@@ -1,0 +1,83 @@
+#!/bin/bash -l
+#PBS -N lanczos_gpu
+#PBS -q auto_free
+#PBS -l select=1:ncpus=4:mpiprocs=2:mem=16gb:ngpus=1
+#PBS -l walltime=02:00:00
+#PBS -j oe
+
+set -euo pipefail
+export LC_ALL=C
+: "${PBS_JOBID:?Submit with qsub}"
+: "${PBS_O_WORKDIR:?Missing PBS working directory}"
+: "${PBS_NODEFILE:?Missing PBS allocation}"
+cd "$PBS_O_WORKDIR"
+test -f gpu_lanczos/Makefile
+job=${PBS_JOBID%%.*}
+result_dir="$PWD/results/Vanda_gpu_lanczos_${job}"
+if [[ -e "$result_dir" ]]; then echo "Refusing existing result directory: $result_dir" >&2; exit 1; fi
+mkdir -p "$result_dir"
+exec > >(tee "$result_dir/workflow.log") 2>&1
+trap 'status=$?; printf "FAILED: exit=%s line=%s command=%s\n" "$status" "$LINENO" "$BASH_COMMAND" >&2; exit "$status"' ERR
+printf 'START GPU_LANCZOS job=%s host=%s stage=%s\n' "$PBS_JOBID" "$(hostname)" "${GPU_LANCZOS_STAGE:-full}"
+module unload openmpi/gcc/64/4.1.8 openmpi4/gcc/4.1.8 2>/dev/null || true
+module load gcc11/11.3.0
+module load cuda12.4/toolkit/12.4.1
+module load mpich/ge/gcc/64/4.1.1
+module load python39
+module list
+: "${MPI_HOME:?MPICH module is required}"
+export MPIEXEC="$MPI_HOME/bin/mpiexec.hydra"
+test -x "$MPIEXEC"
+test -x "$MPI_HOME/bin/mpicxx"
+export FI_PROVIDER="${FI_PROVIDER:-sockets}"
+export OMP_NUM_THREADS=2 OMP_DYNAMIC=FALSE OMP_PROC_BIND=close OMP_PLACES=cores OPENBLAS_NUM_THREADS=1
+unset CPU_PREFIX HYDRA_TOPO_DEBUG HYDRA_BINDING HYDRA_MAPPING PAGERANK_DUMP
+qstat -f "$PBS_JOBID" > "$result_dir/pbs_job.txt"
+cp "$PBS_NODEFILE" "$result_dir/pbs_nodefile.txt"
+lscpu > "$result_dir/cpu_topology.txt"
+nvidia-smi -q > "$result_dir/nvidia_smi.txt"
+nvcc --version > "$result_dir/nvcc_version.txt"
+g++ --version > "$result_dir/compiler_version.txt"
+"$MPI_HOME/bin/mpicxx" -show > "$result_dir/mpi_compiler_command.txt"
+"$MPIEXEC" -info > "$result_dir/mpi_launcher_info.txt"
+python3 - "$PBS_NODEFILE" "$result_dir/pbs_job.txt" "$result_dir/runtime_environment.json" <<'PY'
+from pathlib import Path
+import json,os,re,sys
+hosts=Path(sys.argv[1]).read_text().split()
+text=Path(sys.argv[2]).read_text()
+def resource(name):
+    found=re.search(r'^\s*Resource_List\.'+name+r'\s*=\s*(\d+)',text,re.M)
+    return int(found.group(1)) if found else None
+if len(set(hosts))!=1 or len(hosts)<2 or (resource('ncpus') or 0)<4 or resource('ngpus')!=1:
+    raise RuntimeError('Require one allocated node, >=4 CPUs, >=2 MPI slots, exactly one GPU')
+Path(sys.argv[3]).write_text(json.dumps(dict(parent_cpu_mask=sorted(os.sched_getaffinity(0)),environment={k:v for k,v in os.environ.items() if k.startswith(('FI_','OMP_','CUDA_','MPIR_','HYDRA_'))}),indent=2)+'\n')
+PY
+export CUDA_HOME
+CUDA_HOME=$(python3 - <<'PY'
+from pathlib import Path
+import shutil
+print(Path(shutil.which('nvcc')).resolve().parent.parent)
+PY
+)
+CUDA_LIBDIR="$CUDA_HOME/lib64"
+if [[ ! -f "$CUDA_LIBDIR/libcudart.so" ]]; then CUDA_LIBDIR="$CUDA_HOME/targets/x86_64-linux/lib"; fi
+test -f "$CUDA_LIBDIR/libcudart.so"
+caps=$(nvidia-smi --query-gpu=compute_cap --format=csv,noheader | sort -u | tr -d ' \r')
+if [[ -n "${GPU_LANCZOS_ARCH:-}" ]]; then
+    arch=$GPU_LANCZOS_ARCH
+elif [[ "$caps" =~ ^[0-9]+\.[0-9]+$ ]]; then
+    arch="sm_${caps/./}"
+else
+    echo 'Cannot select a single architecture; set GPU_LANCZOS_ARCH explicitly.' >&2
+    exit 1
+fi
+[[ "$arch" =~ ^sm_[0-9]+$ ]]
+bin_dir="$PWD/work/gpu_lanczos_build_${job}/bin"
+printf 'BUILD MPICH=%s CUDA_HOME=%s CUDA_ARCH=%s FI_PROVIDER=%s\n' "$MPI_HOME" "$CUDA_HOME" "$arch" "$FI_PROVIDER"
+make -C gpu_lanczos -j 2 BIN="$bin_dir" CXX=g++ MPICXX="$MPI_HOME/bin/mpicxx" \
+    NVCC="$(command -v nvcc)" CUDA_HOME="$CUDA_HOME" CUDA_LIBDIR="$CUDA_LIBDIR" CUDA_ARCH="$arch"
+python3 -u gpu_lanczos/scripts/run_gpu_lanczos.py \
+    --bin-dir "$bin_dir" --out "$result_dir/experiment" \
+    --stage "${GPU_LANCZOS_STAGE:-full}" \
+    --timeout "${GPU_LANCZOS_TIMEOUT:-300}" --validation-timeout "${GPU_LANCZOS_VALIDATION_TIMEOUT:-90}"
+printf 'SUCCESS: GPU_LANCZOS results=%s\n' "$result_dir"

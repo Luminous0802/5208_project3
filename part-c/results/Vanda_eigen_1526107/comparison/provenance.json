@@ -1,0 +1,101 @@
+{
+  "site": "Vanda",
+  "hostname": "IN-001",
+  "job_id": "1526107.stdct-mgmt-02",
+  "measurement_id": "ede83c38f066417f96d4c9e57e1c3cc1",
+  "hardware_tag": "IN-001_Intel(R) Xeon(R) Gold 6438N",
+  "source_sha256": "f26a06b566faffa44574b2357d0db26aa423379a6b28b8488d62c9ad31ab9800",
+  "binary_sha256": "1163d7f72d2ed39f1252d5a8caa46a9edc00597afcd04d5d15eac30166dd62d0",
+  "precision": "fp64",
+  "ranks": 4,
+  "threads": 2,
+  "execution_mode": "MPI+OpenMP",
+  "mpi_implementation": "MPICH-4.1.1",
+  "status": "COMPLETE",
+  "configuration": {
+    "out": "/nfs/home/svu/luminousliu/graph-ranking-eigen/graph-ranking-hpc-c/results/Vanda_eigen_1526107/comparison",
+    "site": "Vanda",
+    "hardware_tag": "IN-001_Intel(R) Xeon(R) Gold 6438N",
+    "bin_dir": "/nfs/home/svu/luminousliu/graph-ranking-eigen/graph-ranking-hpc-c/work/eigen_mpich_build_1526107/bin",
+    "work_dir": null,
+    "cpu_prefix": "/cm/shared/apps/mpich/ge/gcc/64/4.1.1/bin/mpiexec.hydra -rmk user -launcher fork -hosts localhost -bind-to core:2 -n 4",
+    "mpi_ranks": 4,
+    "omp_threads": 2,
+    "mpi_implementation": "MPICH-4.1.1",
+    "N": 100000,
+    "repeats": 5,
+    "seed": 20261029,
+    "power_budgets": "10,20,50,100,200,500",
+    "lanczos_budgets": "5,10,20,30,50",
+    "tol": 1e-08,
+    "no_plot": true
+  },
+  "source_files": {
+    "src/graph.hpp": "7d55dbe8a9cc463006e7d401bf959e51f696dc823d8ae7ddda270624f4ddc616",
+    "src/graph_stats.cpp": "641b9de5dda102e83dbab379f675cc00d986ec0046f2d3c48f80f44a4ebfdee5",
+    "src/lanczos.cpp": "f4d6bbca8a3e347ad45fa8a08c295675d13e172baf49bdc83a1850f7c18814b3",
+    "src/make_graph.cpp": "b34eb49d614a812e1e241609765e59e2b92e11bd1c6cdc9a9fd07ffd9cafc830",
+    "src/pagerank_common.hpp": "481db28a05ae7c0f7068684c819ac70d4d5df0a8d787620444ce1df5eac26411",
+    "src/pagerank_cuda.cu": "c314f47d412877145467fe405cf8d5f894a40eee056eedc0046c9067a168da58",
+    "src/pagerank_hybrid.cpp": "0b6902811568d6244f6ca59a145764b57bf491bf4c96430392cff042988b3e85",
+    "src/pagerank_reference.cpp": "53f92aada5664784247da8cf7557f21a4097f1decc367f6fde6fd75c4b81b175",
+    "src/power_symmetric.cpp": "81500e5187d5212178d72ef3957e2d9921266b1bd98b78ef557237c53d57b82c",
+    "src/symmetric.hpp": "46fb992578fbcb50c3046e84a1344959044a8b4aa2197a6b8fa9a55cec4fadc8"
+  },
+  "binaries": {
+    "make_graph": "c1ef5b24373fad377fc97167239b62d536b47971c1a25cd0fdb908edc02c458d",
+    "power_symmetric_mpi": "b7d9432024cf838729327b12f6c3a8910159ce0aa2af15a731ef807c25a654b8",
+    "lanczos_mpi": "72a641bac0220f18be9c384cfd3e5f319f0ba41d3171569faf8c9317367f91a0"
+  },
+  "workflow_sha256": "3f0f7c7e0e0322bcb7dea1b5c389e306825def5e59c721ce6f5a57d444471759",
+  "started_utc": "2026-11-06T08:33:24.410031+00:00",
+  "parent_cpu_mask": [
+    13,
+    21,
+    23,
+    25,
+    27,
+    33,
+    35,
+    63
+  ],
+  "OMP_environment": {
+    "OMP_PLACES": "cores",
+    "OMP_PROC_BIND": "close",
+    "OMP_DYNAMIC": "FALSE",
+    "OMP_NUM_THREADS": "2"
+  },
+  "graphs": [
+    {
+      "model": "uniform",
+      "path": "/nfs/home/svu/luminousliu/graph-ranking-eigen/graph-ranking-hpc-c/results/Vanda_eigen_1526107/comparison/inputs/uniform_n100000_s20261029.txt",
+      "sha256": "cbe5d2e6c8c729ef6350c34b18f52f041e02749d8d3f021e4d137f1c1cfe71e1",
+      "N": 100000,
+      "input_E": 800000,
+      "seed": 20261029
+    },
+    {
+      "model": "hub",
+      "path": "/nfs/home/svu/luminousliu/graph-ranking-eigen/graph-ranking-hpc-c/results/Vanda_eigen_1526107/comparison/inputs/hub_n100000_s20261029.txt",
+      "sha256": "4c37dc499eff2a2e446ab36c47234a9407b5aafb6b1ca0c916faabd3b9fcb24e",
+      "N": 100000,
+      "input_E": 800000,
+      "seed": 20261029
+    },
+    {
+      "model": "community",
+      "path": "/nfs/home/svu/luminousliu/graph-ranking-eigen/graph-ranking-hpc-c/results/Vanda_eigen_1526107/comparison/inputs/community_n100000_s20261029.txt",
+      "sha256": "23953e99a4194ca8a761d9b0e8e000dc1881a15a6044b25fd1236c4d3cf7ec3e",
+      "N": 100000,
+      "input_E": 800000,
+      "seed": 20261029
+    }
+  ],
+  "completed_runs": 165,
+  "operator": "B=(I+S)/2; identical input and initial seed",
+  "time_definition": "solve_s includes projected solve, reconstruction and direct residual; excludes graph loading and MPI launcher overhead",
+  "spmv_definition": "steps + 1 final direct residual call for Lanczos; steps for power",
+  "criterion": "Direct residual at tested budgets; not exact minimum time-to-tolerance",
+  "configurations": 33,
+  "finished_utc": "2026-11-06T08:38:56.223561+00:00"
+}

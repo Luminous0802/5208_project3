@@ -1,0 +1,16 @@
+{
+  "record_type": "LOCAL_VALIDATION_CSV_IMPORT_ONLY",
+  "documentation_updated_date": "2026-11-10",
+  "job_id": "1526107.stdct-mgmt-02",
+  "measurement_id": "6d1a7a375b8a4c698ec732b4c2c5bc03",
+  "measurement_site": "Vanda",
+  "source_filename_description": "comparisons.csv with a duplicate-copy suffix",
+  "package_path": "validation/comparisons.csv",
+  "sha256": "d16490b7c31650dff7dd961a15e79b1284713a28e7cd15f4eeab51a8a3e9a108",
+  "bytes": 6066,
+  "byte_identical_after_filename_normalization": true,
+  "records": 48,
+  "checks": "Identity, case coverage, source hashes and numerical criteria are checked by scripts/audit_eigen_validation.py.",
+  "threshold_source": "scripts/validate_eigen_pair.py",
+  "scope": "Existing CSV evidence only. No solver execution, MPI/CUDA run, performance sampling, or figure generation. The historical top-level import record is preserved."
+}

@@ -1,0 +1,160 @@
+[
+  {
+    "graph_id": "uniform_n100k_e800k",
+    "N": 100000,
+    "E": 800000,
+    "seed": 20261029,
+    "model": "uniform",
+    "sha256": "cbe5d2e6c8c729ef6350c34b18f52f041e02749d8d3f021e4d137f1c1cfe71e1",
+    "options": [],
+    "generator_sha256": "b34eb49d614a812e1e241609765e59e2b92e11bd1c6cdc9a9fd07ffd9cafc830",
+    "part_b_suites": [
+      "B1",
+      "B2"
+    ]
+  },
+  {
+    "graph_id": "b3_uniform",
+    "N": 500000,
+    "E": 4000000,
+    "seed": 20261029,
+    "model": "uniform",
+    "sha256": "55666139f4e50e57080f3ea7d5475e4e4360598a1723545d69332c7602227f6d",
+    "options": [],
+    "generator_sha256": "b34eb49d614a812e1e241609765e59e2b92e11bd1c6cdc9a9fd07ffd9cafc830",
+    "part_b_suites": [
+      "B3"
+    ]
+  },
+  {
+    "graph_id": "b3_hub",
+    "N": 500000,
+    "E": 4000000,
+    "seed": 20261029,
+    "model": "hub",
+    "sha256": "f86188a933245d27ecd8c3651c5eeb5fd5eaf736652f410261125ab3d282ee32",
+    "options": [],
+    "generator_sha256": "b34eb49d614a812e1e241609765e59e2b92e11bd1c6cdc9a9fd07ffd9cafc830",
+    "part_b_suites": [
+      "B3"
+    ]
+  },
+  {
+    "graph_id": "b3_community_ordered",
+    "N": 500000,
+    "E": 4000000,
+    "seed": 20261029,
+    "model": "community",
+    "sha256": "8cd41fc65137aab6772b06a902af8d4bb101b208da0523a8e2e5210e59168da2",
+    "options": [
+      "--communities",
+      "4",
+      "--mix",
+      "0.1",
+      "--shuffle",
+      "0"
+    ],
+    "generator_sha256": "b34eb49d614a812e1e241609765e59e2b92e11bd1c6cdc9a9fd07ffd9cafc830",
+    "part_b_suites": [
+      "B3"
+    ]
+  },
+  {
+    "graph_id": "b3_community_shuffled",
+    "N": 500000,
+    "E": 4000000,
+    "seed": 20261029,
+    "model": "community",
+    "sha256": "a74859f28476bd9579ba56d41c18d0df9ea74e89cb6614a96804aa894983dfc4",
+    "options": [
+      "--communities",
+      "4",
+      "--mix",
+      "0.1",
+      "--shuffle",
+      "1"
+    ],
+    "generator_sha256": "b34eb49d614a812e1e241609765e59e2b92e11bd1c6cdc9a9fd07ffd9cafc830",
+    "part_b_suites": [
+      "B3"
+    ]
+  },
+  {
+    "graph_id": "b4_uniform_s20261029",
+    "N": 1000000,
+    "E": 8000000,
+    "seed": 20261029,
+    "model": "uniform",
+    "sha256": "0eab7b97f398ec9bc227cd8d32f73db9f6493c27dc27018bd98cd0185b518f56",
+    "options": [],
+    "generator_sha256": "b34eb49d614a812e1e241609765e59e2b92e11bd1c6cdc9a9fd07ffd9cafc830",
+    "part_b_suites": [
+      "B4"
+    ]
+  },
+  {
+    "graph_id": "b4_hub_s20261029",
+    "N": 1000000,
+    "E": 8000000,
+    "seed": 20261029,
+    "model": "hub",
+    "sha256": "a354c8994f082bd3c649343fa529081d7b3713c5bd3de2dd269bbedd74471315",
+    "options": [],
+    "generator_sha256": "b34eb49d614a812e1e241609765e59e2b92e11bd1c6cdc9a9fd07ffd9cafc830",
+    "part_b_suites": [
+      "B4"
+    ]
+  },
+  {
+    "graph_id": "b4_uniform_s20261030",
+    "N": 1000000,
+    "E": 8000000,
+    "seed": 20261030,
+    "model": "uniform",
+    "sha256": "7aa6fdea6fa6b9fc77dbc15761e6c9f5eb612f36f1de2471bef60c51fde2cba6",
+    "options": [],
+    "generator_sha256": "b34eb49d614a812e1e241609765e59e2b92e11bd1c6cdc9a9fd07ffd9cafc830",
+    "part_b_suites": [
+      "B4"
+    ]
+  },
+  {
+    "graph_id": "b4_hub_s20261030",
+    "N": 1000000,
+    "E": 8000000,
+    "seed": 20261030,
+    "model": "hub",
+    "sha256": "e9a59f1c3d05e59ba180ff4e5adcd036e5ed5fda548981d786e1d0b16a4aa71f",
+    "options": [],
+    "generator_sha256": "b34eb49d614a812e1e241609765e59e2b92e11bd1c6cdc9a9fd07ffd9cafc830",
+    "part_b_suites": [
+      "B4"
+    ]
+  },
+  {
+    "graph_id": "b4_uniform_s20261031",
+    "N": 1000000,
+    "E": 8000000,
+    "seed": 20261031,
+    "model": "uniform",
+    "sha256": "dfbc95d492083f50fbc8d84e9e5a4b670593b7123f0a7ae561f6f676f85fb5af",
+    "options": [],
+    "generator_sha256": "b34eb49d614a812e1e241609765e59e2b92e11bd1c6cdc9a9fd07ffd9cafc830",
+    "part_b_suites": [
+      "B4"
+    ]
+  },
+  {
+    "graph_id": "b4_hub_s20261031",
+    "N": 1000000,
+    "E": 8000000,
+    "seed": 20261031,
+    "model": "hub",
+    "sha256": "012ff293923e79a6bdaa131c084181af0d927129354c5788862e804556b0ea26",
+    "options": [],
+    "generator_sha256": "b34eb49d614a812e1e241609765e59e2b92e11bd1c6cdc9a9fd07ffd9cafc830",
+    "part_b_suites": [
+      "B4"
+    ]
+  }
+]

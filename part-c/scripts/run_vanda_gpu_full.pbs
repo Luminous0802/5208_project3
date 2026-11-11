@@ -1,0 +1,102 @@
+#!/bin/bash -l
+#PBS -N graph_gpu_full
+#PBS -q auto_free
+#PBS -l select=1:ncpus=12:mpiprocs=12:mem=20gb:ngpus=1
+#PBS -l walltime=01:00:00
+#PBS -j oe
+
+# Submit from the graph-ranking-hpc-c project directory with qsub, or run inside
+# an existing 12-core GPU allocation with GRAPH_PROJECT_DIR="$PWD" bash FILE.
+# Resource request matches the current queued experiment; scheduling time is unknown.
+set -euo pipefail
+export LC_ALL=C
+: "${PBS_JOBID:?Run inside a PBS GPU allocation, or submit with qsub}"
+: "${PBS_O_WORKDIR:?Missing PBS submission directory}"
+cd "${GRAPH_PROJECT_DIR:-$PBS_O_WORKDIR}"
+test -f scripts/gpu_preflight.sh
+test -f scripts/configs_gpu_hybrid_12cores.json
+
+job_number=${PBS_JOBID%%.*}
+result_dir="$PWD/results/Vanda_gpu_${job_number}"
+mkdir -p "$result_dir"
+exec > >(tee -a "$result_dir/workflow.log") 2>&1
+trap 'status=$?; printf "FAILED: exit=%s line=%s command=%s\n" "$status" "$LINENO" "$BASH_COMMAND" >&2; exit "$status"' ERR
+
+echo "START $(date -u '+%Y-%m-%dT%H:%M:%SZ') job=$PBS_JOBID node=$(hostname)"
+module load gcc11/11.3.0
+module load cuda12.4/toolkit/12.4.1
+module load openmpi/gcc/64/4.1.8
+module load python39
+module list
+g++ --version
+mpirun --version
+nvcc --version
+python3 --version
+nvidia-smi
+lscpu > "$result_dir/cpu_topology.txt"
+qstat -f "$PBS_JOBID" > "$result_dir/pbs_job.txt"
+if [[ -n "${PBS_NODEFILE:-}" && -r "$PBS_NODEFILE" ]]; then
+    cp "$PBS_NODEFILE" "$result_dir/pbs_nodefile.txt"
+    if (( $(wc -l < "$PBS_NODEFILE") < 12 )); then
+        echo 'Fewer than 12 MPI slots were allocated; stopping.' >&2
+        exit 1
+    fi
+    if (( $(sort -u "$PBS_NODEFILE" | wc -l) != 1 )); then
+        echo 'CPU/GPU comparison requires one allocated node; stopping.' >&2
+        exit 1
+    fi
+fi
+
+# Query available device architectures rather than assuming the allocation is A40.
+# A homogeneous node supplies one unique compute capability. Otherwise nvcc uses
+# its default target, with actual device execution checked by preflight.
+gpu_caps=$(nvidia-smi --query-gpu=compute_cap --format=csv,noheader | sort -u | tr -d ' \r')
+if [[ "$gpu_caps" =~ ^[0-9]+\.[0-9]+$ ]]; then
+    export CUDA_ARCH="sm_${gpu_caps/./}"
+else
+    unset CUDA_ARCH
+fi
+
+export BIN_DIR="$PWD/work/gpu_build_${job_number}/bin"
+export VALIDATION_OUT="$result_dir/validation"
+export MPIEXEC=mpirun
+export MPIEXEC_ARGS='--map-by slot:PE={threads} --bind-to core --report-bindings'
+export GPU_HYBRID_CONFIGS=scripts/configs_gpu_hybrid_12cores.json
+export OMP_NUM_THREADS=1
+export OMP_DYNAMIC=FALSE
+unset CPU_PREFIX
+
+bash scripts/gpu_preflight.sh 2>&1 | tee "$result_dir/preflight.log"
+
+make BIN="$BIN_DIR" "$BIN_DIR/make_graph"
+python3 -u scripts/prepare_part_b_gpu.py --bin-dir "$BIN_DIR" --generate
+
+hardware_tag=$(python3 -c 'import platform,subprocess; names=subprocess.check_output(["nvidia-smi","--query-gpu=name","--format=csv,noheader"],text=True).strip().replace("\n","+"); print(platform.node()+"_"+names)')
+python3 -u scripts/benchmark_gpu.py work/part_b_gpu_manifest.json \
+    --site Vanda \
+    --hardware-tag "$hardware_tag" \
+    --build-tag "O3-cxx17-fp64-${CUDA_ARCH:-nvcc-default}" \
+    --bin-dir "$BIN_DIR" \
+    --out "$result_dir" \
+    --repeats 5 --K 50 --block-sizes 256 \
+    --hybrid-configs "$GPU_HYBRID_CONFIGS" --cpu-cores 12 \
+    2>&1 | tee "$result_dir/benchmark.log"
+
+# CSV analysis needs only the Python standard library. Generate figures later
+# using the same runs.csv and analyze_gpu.py with --plot-dir if desired.
+python3 scripts/analyze_gpu.py "$result_dir/runs.csv" \
+    --out "$result_dir/summary.csv"
+python3 - "$result_dir/runs.csv" <<'PY'
+import csv
+import sys
+from collections import Counter
+with open(sys.argv[1], newline='') as stream:
+    rows = list(csv.DictReader(stream))
+counts = Counter(row['backend'] for row in rows)
+expected = {'cpu_serial': 30, 'cuda': 60, 'cpu_hybrid': 120}
+if len(rows) != 210 or dict(counts) != expected:
+    raise SystemExit(f'Incomplete experiment: rows={len(rows)}, backends={dict(counts)}')
+print(f'COMPLETE: 210 runs, backends={dict(counts)}')
+PY
+printf 'SUCCESS: results=%s\n' "$result_dir"
+printf 'FINISH %s\n' "$(date -u '+%Y-%m-%dT%H:%M:%SZ')"

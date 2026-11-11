@@ -1,0 +1,6 @@
+[
+  {"ranks": 2, "threads": 6, "partition": "vertex", "schedule": "static", "chunk": 0},
+  {"ranks": 6, "threads": 2, "partition": "vertex", "schedule": "static", "chunk": 0},
+  {"ranks": 6, "threads": 2, "partition": "edge", "schedule": "static", "chunk": 0},
+  {"ranks": 6, "threads": 2, "partition": "edge", "schedule": "dynamic", "chunk": 64}
+]

@@ -1,0 +1,54 @@
+{
+  "record_type": "LOCAL_PACKAGING_CHECK_ONLY",
+  "recorded_utc": "2026-11-06T09:16:54.856329+00:00",
+  "job_id": "1526107.stdct-mgmt-02",
+  "measurement_site": "Vanda",
+  "user_provided_folder": "Vanda_eigen_1526107",
+  "files": [
+    {
+      "original_filename": "runs.csv",
+      "package_path": "comparison/runs.csv",
+      "sha256": "46777700de531ef2b1e6fe26b1186ee13f8f43928bf366e9c78917ed412072c1",
+      "bytes": 85294,
+      "byte_identical_to_user_input": true
+    },
+    {
+      "original_filename": "summary.csv",
+      "package_path": "comparison/summary.csv",
+      "sha256": "044dc1707ae0d2a0a0b6a9e37fe43de95bc6b162b47d9ec5ad13f37b91529e90",
+      "bytes": 16099,
+      "byte_identical_to_user_input": true
+    },
+    {
+      "original_filename": "provenance.json",
+      "package_path": "comparison/provenance.json",
+      "sha256": "f85f69c73bdbdc415669637027bf89195af763f7170a711de697fe8ee5dad8d4",
+      "bytes": 4476,
+      "byte_identical_to_user_input": true
+    },
+    {
+      "original_filename": "summary.json",
+      "package_path": "validation/summary.json",
+      "sha256": "0c3f032fc964a23b4e96d964238556490a4bdb7baa49a7f6c3eacb5b5b911530",
+      "bytes": 1749,
+      "byte_identical_to_user_input": true
+    }
+  ],
+  "checks": {
+    "raw_runs": 165,
+    "summary_configurations": 33,
+    "repetitions_per_configuration": 5,
+    "run_ids_unique": true,
+    "summary_statistics_match_raw_csv": true,
+    "rows_match_provenance_identity": true,
+    "graph_metadata_match_provenance": true,
+    "all_recorded_source_files_match_package": true,
+    "measurement_driver_sha256_matches": true,
+    "validation_summary_reports": {
+      "status": "PASS",
+      "comparisons": 48,
+      "serial_only": false
+    }
+  },
+  "scope": "File, CSV and hash checks only; no solver, MPI validation, benchmark or plotting was executed locally. Original remote logs and binaries were not supplied."
+}

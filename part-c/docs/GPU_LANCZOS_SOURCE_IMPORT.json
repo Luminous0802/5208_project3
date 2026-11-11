@@ -1,0 +1,40 @@
+{
+  "source_archive": "gpu-lanczos-vanda-experiment.zip",
+  "archive_sha256": "ed159f5263d1342497abb1a6acba328bb8c8f628b3a72121f3815f6777618010",
+  "source_sha256": "a45cd0e5ee77573381a84779dd3006b02fb535867375030871d9dec3fac512a4",
+  "matches_recorded_run_source_fingerprint": true,
+  "source_files": {
+    "src/graph.hpp": "7d55dbe8a9cc463006e7d401bf959e51f696dc823d8ae7ddda270624f4ddc616",
+    "src/symmetric.hpp": "46fb992578fbcb50c3046e84a1344959044a8b4aa2197a6b8fa9a55cec4fadc8",
+    "src/lanczos.cpp": "f4d6bbca8a3e347ad45fa8a08c295675d13e172baf49bdc83a1850f7c18814b3",
+    "src/make_graph.cpp": "b34eb49d614a812e1e241609765e59e2b92e11bd1c6cdc9a9fd07ffd9cafc830",
+    "gpu_lanczos/configs/graphs.json": "ded07a59a506dc9f6530e9cde1b6488fbd76fd38b4ca32d1359136ce7e93945f",
+    "gpu_lanczos/scripts/analyze_gpu_lanczos.py": "68e9a7fccb81574d3f889d7a762efd04a0588aa9b56fcd254c364cb3d5475814",
+    "gpu_lanczos/scripts/lanczos_common.py": "d175bff5210b750916441d984adc82769dd9b01e6302b2e97620733b886d445c",
+    "gpu_lanczos/scripts/run_gpu_lanczos.py": "d413824062c1afea69fde6d861dbb4783205d1a8a3c4abadd8cdac4c83c38cbf",
+    "gpu_lanczos/src/device_lanczos.cu": "c98c2dc3c852c39e9a345871114895283329c29451fe23be8bcd505b1f98414a",
+    "gpu_lanczos/src/device_lanczos.hpp": "1050103509d2adab656fef3915d52c6e1bdc2328aa889d19a8d6bc9e44ab43b3",
+    "gpu_lanczos/src/lanczos_cuda.cpp": "594b07b745a885cd25c42ba2c3d4d2a62de0c0c021551b64fa753bf021468230",
+    "scripts/process_logging.py": "2346398d54b129dcc4d3b316e8ea9f602fbbe32bce098b9436c02f04f6149785",
+    "scripts/cpu_affinity_exec.py": "49da4ab0624c71a58efb0890dd33344fdc2e33ef6aec4c314a86dd74b959b425",
+    "scripts/run_vanda_gpu_lanczos.pbs": "14f9f3130ba962bdcde8bc1600ddbefeb4e953077b36279f6d9f26d9a7462c47",
+    "gpu_lanczos/Makefile": "69c7a0caf1fdc2656ad6b66ca8fde539b6a6302702baaa8f571287c4dc232e9e"
+  },
+  "original_static_checks": {
+    "code_status": "NOT_COMPILED_OR_RUN_ON_VANDA",
+    "checks_utc": "2026-11-10T10:51:54.969948+00:00",
+    "python_AST_files": 5,
+    "shell_syntax": true,
+    "inline_python_blocks": 1,
+    "host_CXX_parser_with_interface_declarations": true,
+    "CUDA_parser_with_interface_declarations": true,
+    "make_dependency_dry_run": true,
+    "actual_MPICH_CUDA_compilation": false,
+    "solver_execution": false,
+    "validation_execution": false,
+    "benchmarks_executed": false,
+    "plots_generated": false,
+    "note": "Parser checks used local interface declarations rather than real MPI/CUDA headers or linking. The Vanda job must compile and pass independent validation before measurement."
+  },
+  "scope": "Original static checks are historical pre-run checks. The source fingerprint matches job 1536096 CSVs; this merge does not recompile or rerun the cluster experiment."
+}

@@ -1,0 +1,31 @@
+#!/bin/bash
+#PBS -N pr_val_10k
+#PBS -q auto
+#PBS -l select=1:ncpus=12:mpiprocs=12:mem=8gb
+#PBS -l walltime=00:05:00
+#PBS -j oe
+
+set -euo pipefail
+cd "$PBS_O_WORKDIR"
+module load openmpi/gcc/64/4.1.8
+
+graph=validation_graph_10k_80k.txt
+expected_sha256=f1320185cb96869d0d3e0ecb53d87f1125e97b9d83f8ab6f9cc6cf406e9a5312
+actual_sha256=$(sha256sum "$graph" | awk '{print $1}')
+if [[ "$actual_sha256" != "$expected_sha256" ]]; then
+    echo "Validation graph hash mismatch" >&2
+    exit 1
+fi
+
+mpi_prefix=/cm/shared/apps/openmpi4/gcc/4.1.8
+hostfile="mpi_hosts_validate_$PBS_JOBID.txt"
+sort "$PBS_NODEFILE" | uniq -c |
+    awk '{ print $2 " slots=" $1 }' > "$hostfile"
+
+"$mpi_prefix/bin/mpirun" \
+    --prefix "$mpi_prefix" \
+    --hostfile "$hostfile" \
+    -np 12 \
+    ./pagerank_mpi "$graph" 50 --dump validation_rank_v1_p12.txt
+
+wc -l validation_rank_v1_p12.txt

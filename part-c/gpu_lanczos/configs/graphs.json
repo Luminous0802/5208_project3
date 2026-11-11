@@ -1,0 +1,9 @@
+{
+  "generator_sha256": "b34eb49d614a812e1e241609765e59e2b92e11bd1c6cdc9a9fd07ffd9cafc830",
+  "reference_job": "1526107.stdct-mgmt-02",
+  "graphs": [
+    {"model":"uniform","N":100000,"input_E":800000,"seed":20261029,"sha256":"cbe5d2e6c8c729ef6350c34b18f52f041e02749d8d3f021e4d137f1c1cfe71e1"},
+    {"model":"hub","N":100000,"input_E":800000,"seed":20261029,"sha256":"4c37dc499eff2a2e446ab36c47234a9407b5aafb6b1ca0c916faabd3b9fcb24e"},
+    {"model":"community","N":100000,"input_E":800000,"seed":20261029,"sha256":"23953e99a4194ca8a761d9b0e8e000dc1881a15a6044b25fd1236c4d3cf7ec3e"}
+  ]
+}
