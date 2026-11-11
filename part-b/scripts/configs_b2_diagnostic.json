@@ -1,0 +1,4 @@
+[
+  {"version":"V1","ranks":12,"threads":1},
+  {"version":"V2","ranks":6,"threads":2,"schedule":"static"}
+]

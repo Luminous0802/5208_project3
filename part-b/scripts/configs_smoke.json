@@ -1,0 +1,6 @@
+[
+  {"version":"V0","ranks":1,"threads":1},
+  {"version":"V1","ranks":2,"threads":1},
+  {"version":"V2","ranks":2,"threads":2,"schedule":"static"},
+  {"version":"V3","ranks":2,"threads":2,"schedule":"dynamic","chunk":4}
+]

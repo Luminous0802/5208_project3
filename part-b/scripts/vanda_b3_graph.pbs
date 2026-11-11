@@ -1,0 +1,86 @@
+#!/bin/bash
+#PBS -q auto_free
+#PBS -l select=1:ncpus=12:mpiprocs=12:mem=20gb
+#PBS -l walltime=02:00:00
+#PBS -j oe
+#PBS -N B3_Graph
+
+set -euo pipefail
+cd "$PBS_O_WORKDIR"
+
+module load openmpi/gcc/64/4.1.8
+module load git/2.40.0
+
+export OMP_DYNAMIC=FALSE
+export OMP_PROC_BIND=close
+export OMP_PLACES=cores
+export MPIEXEC=mpirun
+export MPIEXEC_ARGS="--map-by slot:PE={threads} --bind-to core"
+
+# Use compute-node-compiled binaries.
+test -x bin/pagerank_hybrid
+test -x bin/make_graph
+test -x bin/graph_stats
+
+mkdir -p work/b3
+
+# Four graph structures, same N, E and seed.
+./bin/make_graph uniform 500000 4000000 20261029 \
+  work/b3/uniform.txt
+
+./bin/make_graph hub 500000 4000000 20261029 \
+  work/b3/hub.txt
+
+./bin/make_graph community 500000 4000000 20261029 \
+  work/b3/community_ordered.txt \
+  --communities 4 --mix 0.1 --shuffle 0
+
+./bin/make_graph community 500000 4000000 20261029 \
+  work/b3/community_shuffled.txt \
+  --communities 4 --mix 0.1 --shuffle 1
+
+# Manifest for the benchmark runner.
+python3 - <<'PY'
+import json
+from pathlib import Path
+
+names = [
+    ("uniform", "uniform"),
+    ("hub", "hub"),
+    ("community_ordered", "community"),
+    ("community_shuffled", "community"),
+]
+
+graphs = []
+for name, model in names:
+    graphs.append({
+        "graph_id": "b3_" + name,
+        "path": str(Path("work/b3", name + ".txt").resolve()),
+        "N": 500000,
+        "E": 4000000,
+        "seed": 20261029,
+        "model": model,
+        "experiments": ["E3"]
+    })
+
+Path("work/b3/manifest.json").write_text(
+    json.dumps(graphs, indent=2) + "\n"
+)
+PY
+
+# Run randomized, repeated experiments.
+python3 scripts/benchmark.py \
+  work/b3/manifest.json \
+  --configs scripts/configs_b3_graph.json \
+  --out "results/b3_graph_${PBS_JOBID%%.*}" \
+  --site Vanda \
+  --max-cores 12 \
+  --experiments E3 \
+  --repeats 5 \
+  --K 50
+
+python3 scripts/summarize.py \
+  "results/b3_graph_${PBS_JOBID%%.*}/runs.csv" \
+  --out "results/b3_graph_${PBS_JOBID%%.*}/summary.csv"
+
+echo "B3 graph benchmark finished."

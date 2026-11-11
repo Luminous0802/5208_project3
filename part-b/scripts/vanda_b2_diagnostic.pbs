@@ -1,0 +1,35 @@
+#!/bin/bash
+#PBS -q auto_free
+#PBS -l select=1:ncpus=12:mpiprocs=12:mem=20gb
+#PBS -l walltime=00:15:00
+#PBS -j oe
+#PBS -N B2_Diagnostic
+
+set -euo pipefail
+cd "$PBS_O_WORKDIR"
+
+module load openmpi/gcc/64/4.1.8
+module load git/2.40.0
+
+export OMP_DYNAMIC=FALSE
+export OMP_PROC_BIND=close
+export OMP_PLACES=cores
+
+export MPIEXEC=mpirun
+export MPIEXEC_ARGS="--map-by slot:PE={threads} --bind-to core --report-bindings"
+
+test -x bin/pagerank_hybrid
+test -x bin/pagerank_mpi
+test -f work/b1/manifest_b2.json
+
+python3 scripts/benchmark.py \
+  work/b1/manifest_b2.json \
+  --configs scripts/configs_b2_diagnostic.json \
+  --out "results/b2_diagnostic_${PBS_JOBID%%.*}" \
+  --site Vanda \
+  --max-cores 12 \
+  --experiments E2 \
+  --repeats 1 \
+  --K 50
+
+echo "B2 diagnostic finished."

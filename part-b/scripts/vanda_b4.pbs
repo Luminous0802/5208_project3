@@ -1,0 +1,86 @@
+#!/bin/bash
+#PBS -q auto_free
+#PBS -l select=1:ncpus=12:mpiprocs=12:mem=20gb
+#PBS -l walltime=04:00:00
+#PBS -j oe
+#PBS -N B4_Large
+
+set -euo pipefail
+cd "$PBS_O_WORKDIR"
+
+module load openmpi/gcc/64/4.1.8
+module load git/2.40.0
+
+export OMP_DYNAMIC=FALSE
+export OMP_PROC_BIND=close
+export OMP_PLACES=cores
+export MPIEXEC=mpirun
+export MPIEXEC_ARGS="--map-by slot:PE={threads} --bind-to core"
+
+# Scratch is temporary storage.
+scratch_dir="/scratch/$USER/graph-ranking-b4"
+mkdir -p "$scratch_dir"
+mkdir -p work
+
+# Link work/b4 to scratch.
+if [ ! -e work/b4 ]; then
+    ln -s "$scratch_dir" work/b4
+fi
+
+test -x bin/make_graph
+test -x bin/pagerank_hybrid
+
+# Generate six large graphs.
+for seed in 20261029 20261030 20261031; do
+    for model in uniform hub; do
+        graph="work/b4/${model}_s${seed}.txt"
+        if [ ! -s "$graph" ]; then
+            ./bin/make_graph "$model" \
+                1000000 8000000 "$seed" "$graph"
+        fi
+    done
+done
+
+# Create explicit manifest.
+python3 - <<'PY'
+import json
+from pathlib import Path
+
+graphs = []
+for seed in [20261029, 20261030, 20261031]:
+    for model in ["uniform", "hub"]:
+        path = Path(
+            f"work/b4/{model}_s{seed}.txt"
+        ).resolve()
+
+        graphs.append({
+            "graph_id": f"b4_{model}_s{seed}",
+            "path": str(path),
+            "N": 1000000,
+            "E": 8000000,
+            "seed": seed,
+            "model": model,
+            "experiments": ["E4"]
+        })
+
+Path("work/b4/manifest.json").write_text(
+    json.dumps(graphs, indent=2) + "\n"
+)
+PY
+
+# Run 180 measurements.
+python3 scripts/benchmark.py \
+    work/b4/manifest.json \
+    --configs scripts/configs_b4.json \
+    --out "results/b4_large_${PBS_JOBID%%.*}" \
+    --site Vanda \
+    --max-cores 12 \
+    --experiments E4 \
+    --repeats 5 \
+    --K 50
+
+python3 scripts/summarize.py \
+    "results/b4_large_${PBS_JOBID%%.*}/runs.csv" \
+    --out "results/b4_large_${PBS_JOBID%%.*}/summary.csv"
+
+echo "B4 large-scale benchmark finished."

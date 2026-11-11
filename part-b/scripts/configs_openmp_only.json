@@ -1,0 +1,9 @@
+[
+  {"version":"V0","ranks":1,"threads":1},
+  {"version":"V2","ranks":1,"threads":1,"schedule":"static"},
+  {"version":"V2","ranks":1,"threads":2,"schedule":"static"},
+  {"version":"V2","ranks":1,"threads":4,"schedule":"static"},
+  {"version":"V2","ranks":1,"threads":8,"schedule":"static"},
+  {"version":"V2","ranks":1,"threads":12,"schedule":"static"},
+  {"version":"V2","ranks":1,"threads":12,"schedule":"dynamic","chunk":64}
+]

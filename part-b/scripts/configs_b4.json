@@ -1,0 +1,8 @@
+[
+  {"version":"V2","ranks":6,"threads":2,"schedule":"static"},
+  {"version":"V3","ranks":6,"threads":2,"schedule":"static"},
+  {"version":"V2","ranks":3,"threads":4,"schedule":"static"},
+  {"version":"V3","ranks":3,"threads":4,"schedule":"static"},
+  {"version":"V2","ranks":2,"threads":6,"schedule":"static"},
+  {"version":"V3","ranks":2,"threads":6,"schedule":"static"}
+]

@@ -1,0 +1,51 @@
+#!/bin/bash
+#PBS -N serial_scale
+#PBS -q auto
+#PBS -l select=1:ncpus=1:mem=8gb
+#PBS -l walltime=02:00:00
+#PBS -j oe
+
+set -euo pipefail
+cd "$PBS_O_WORKDIR"
+module load openmpi/gcc/64/4.1.8
+
+csv="serial_scaling_${PBS_JOBID%%.*}.csv"
+echo "N,E,seed,run,iteration_s,rank_sum,residual" > "$csv"
+echo "hostname=$(hostname)"
+
+while read -r n e file; do
+    if [[ ! -f "$file" ]]; then
+        temporary="${file}.tmp.${PBS_JOBID%%.*}"
+        ./make_pilot_graph "$n" "$e" 20261029 "$temporary"
+        mv "$temporary" "$file"
+    fi
+
+    read -r actual_n actual_e < "$file"
+    if [[ "$actual_n" != "$n" || "$actual_e" != "$e" ]]; then
+        echo "Graph header mismatch: $file" >&2
+        exit 1
+    fi
+
+    for run in 1 2 3 4 5; do
+        result=$(./pagerank "$file" 50)
+        printf '%s\n' "$result" |
+            awk -v n="$n" -v e="$e" -v run="$run" '
+                /^iteration_s:/ { time=$2 }
+                /^rank_sum:/    { total=$2 }
+                /^residual:/    { residual=$2 }
+                END {
+                    if (time == "" || total == "" || residual == "") exit 1
+                    print n "," e ",20261029," run "," time "," total "," residual
+                }
+            ' >> "$csv"
+    done
+done <<'DATA'
+100000 800000 pilot_graph.txt
+500000 4000000 pilot_graph_500k_4m.txt
+1000000 4000000 pilot_graph_1m_4m.txt
+1000000 8000000 pilot_graph_1m.txt
+1000000 16000000 pilot_graph_1m_16m.txt
+DATA
+
+echo "result_file=$csv"
+cat "$csv"

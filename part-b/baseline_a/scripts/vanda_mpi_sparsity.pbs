@@ -1,0 +1,73 @@
+#!/bin/bash
+#PBS -N pr_mpi_sparse
+#PBS -q auto
+#PBS -l select=1:ncpus=12:mpiprocs=12:mem=8gb
+#PBS -l walltime=01:00:00
+#PBS -j oe
+
+set -euo pipefail
+cd "$PBS_O_WORKDIR"
+
+module load openmpi/gcc/64/4.1.8
+MPI_PREFIX=/cm/shared/apps/openmpi4/gcc/4.1.8
+
+HOSTFILE="mpi_hosts_${PBS_JOBID%%.*}.txt"
+CSV_FILE="mpi_sparsity_${PBS_JOBID%%.*}.csv"
+
+sort "$PBS_NODEFILE" | uniq -c |
+    awk '{ print $2 " slots=" $1 }' > "$HOSTFILE"
+
+echo "allocated_slots:"
+cat "$HOSTFILE"
+
+echo "N,E,ranks,run,iteration_s,compute_s,allreduce_s,allgatherv_s,edge_imbalance,rank_sum,residual" > "$CSV_FILE"
+
+for spec in \
+    "4000000:pilot_graph_1m_4m.txt" \
+    "8000000:pilot_graph_1m.txt" \
+    "16000000:pilot_graph_1m_16m.txt"
+do
+    IFS=: read -r edges graph <<< "$spec"
+
+    read -r graph_n graph_e < "$graph"
+    if [[ "$graph_n" != "1000000" || "$graph_e" != "$edges" ]]; then
+        echo "Graph header does not match: $graph" >&2
+        exit 1
+    fi
+
+    echo "graph=$graph"
+
+    for run in 1 2 3 4 5; do
+        result=$(
+            "$MPI_PREFIX/bin/mpirun" \
+                --prefix "$MPI_PREFIX" \
+                --hostfile "$HOSTFILE" \
+                -np 12 \
+                ./pagerank_mpi "$graph" 50
+        )
+
+        printf '%s\n' "$result" |
+            awk -v edges="$edges" -v run="$run" '
+                /^iteration_s:/    { total=$2; have_total=1 }
+                /^compute_s:/      { compute=$2; have_compute=1 }
+                /^allreduce_s:/    { reduce=$2; have_reduce=1 }
+                /^allgatherv_s:/   { gather=$2; have_gather=1 }
+                /^edge_imbalance:/ { imbalance=$2; have_imbalance=1 }
+                /^rank_sum:/       { sum=$2; have_sum=1 }
+                /^residual:/       { residual=$2; have_residual=1 }
+                END {
+                    if (!(have_total && have_compute && have_reduce &&
+                          have_gather && have_imbalance && have_sum &&
+                          have_residual)) {
+                        print "Missing PageRank timing or validation field" > "/dev/stderr"
+                        exit 1
+                    }
+                    print "1000000," edges ",12," run "," total "," compute "," \
+                          reduce "," gather "," imbalance "," sum "," residual
+                }
+            ' | tee -a "$CSV_FILE"
+    done
+done
+
+echo "result_file=$CSV_FILE"
+

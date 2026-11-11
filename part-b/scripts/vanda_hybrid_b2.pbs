@@ -1,0 +1,59 @@
+
+#!/bin/bash
+#PBS -q auto_free
+#PBS -l select=1:ncpus=12:mpiprocs=12:mem=20gb
+#PBS -l walltime=01:00:00
+#PBS -j oe
+#PBS -N B2_Hybrid
+
+set -euo pipefail
+cd "$PBS_O_WORKDIR"
+
+module load openmpi/gcc/64/4.1.8
+module load git/2.40.0
+
+export OMP_DYNAMIC=FALSE
+export OMP_PROC_BIND=close
+export OMP_PLACES=cores
+export MPIEXEC=mpirun
+export MPIEXEC_ARGS="--map-by slot:PE={threads} --bind-to core"
+
+# Use binaries compiled on Vanda compute nodes.
+test -x bin/pagerank_hybrid
+test -x bin/pagerank_mpi
+test -x bin/pagerank
+
+# Reuse the existing B1 graph.
+test -f work/b1/uniform_n100k_e800k.txt
+
+# Create a manifest for the B2 benchmark.
+python3 - <<'PY'
+import json
+from pathlib import Path
+
+p = Path("work/b1/uniform_n100k_e800k.txt").resolve()
+manifest = [{
+    "graph_id": "uniform_n100k_e800k",
+    "path": str(p),
+    "N": 100000,
+    "E": 800000,
+    "seed": 20261029,
+    "model": "uniform",
+    "experiments": ["E2"]
+}]
+Path("work/b1/manifest_b2.json").write_text(
+    json.dumps(manifest, indent=2)
+)
+PY
+
+python3 scripts/benchmark.py \
+  work/b1/manifest_b2.json \
+  --configs scripts/configs_12cores.json \
+  --out "results/b2_hybrid_${PBS_JOBID%%.*}" \
+  --site Vanda \
+  --max-cores 12 \
+  --experiments E2 \
+  --repeats 5 \
+  --K 50
+
+echo "B2 benchmark finished."

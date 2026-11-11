@@ -1,0 +1,15 @@
+#!/bin/bash
+#PBS -q auto_free
+#PBS -l select=1:ncpus=12:mpiprocs=2:ompthreads=2
+#PBS -l walltime=00:10:00
+#PBS -j oe
+set -euo pipefail
+cd "$PBS_O_WORKDIR"
+module load openmpi/gcc/64/4.1.8
+export OMP_NUM_THREADS=2 OMP_DYNAMIC=FALSE OMP_PROC_BIND=close OMP_PLACES=cores
+make -j 1
+# Four allocated CPU cores: two MPI ranks, two OpenMP threads each.
+for part in vertex edge; do
+  echo "=== partition=$part ==="
+  mpirun -np 2 --map-by slot:PE=2 --bind-to core ./bin/pagerank_hybrid tests/tiny_graph.txt 300 1e-8 --partition "$part" --schedule static
+ done

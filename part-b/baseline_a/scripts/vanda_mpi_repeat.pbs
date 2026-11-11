@@ -1,0 +1,53 @@
+#!/bin/bash
+#PBS -q auto
+#PBS -l walltime=00:30:00
+#PBS -j oe
+
+set -euo pipefail
+cd "$PBS_O_WORKDIR"
+module load openmpi/gcc/64/4.1.8
+
+: "${RANKS:?RANKS was not supplied}"
+allocated=$(wc -l < "$PBS_NODEFILE")
+if [[ "$allocated" -ne "$RANKS" ]]; then
+    echo "Allocated $allocated MPI slots; requested $RANKS" >&2
+    exit 1
+fi
+
+hostfile="mpi_hosts_${PBS_JOBID%%.*}.txt"
+sort "$PBS_NODEFILE" | uniq -c |
+    awk '{ print $2 " slots=" $1 }' > "$hostfile"
+
+echo "allocated_slots:"
+cat "$hostfile"
+echo "launched_ranks_by_node:"
+mpirun --prefix /cm/shared/apps/openmpi4/gcc/4.1.8 --hostfile "$hostfile" -np "$RANKS" hostname |
+    sort | uniq -c
+
+csv="mpi_scaling_${RANKS}_${PBS_JOBID%%.*}.csv"
+echo "ranks,run,iteration_s,compute_s,allreduce_s,allgatherv_s,edge_imbalance,rank_sum,residual" > "$csv"
+
+for run in 1 2 3 4 5; do
+    result=$(mpirun --prefix /cm/shared/apps/openmpi4/gcc/4.1.8 --hostfile "$hostfile" -np "$RANKS" \
+        ./pagerank_mpi pilot_graph_1m.txt 50)
+
+    printf '%s\n' "$result" |
+        awk -v ranks="$RANKS" -v run="$run" '
+            /^iteration_s:/    { time=$2 }
+            /^compute_s:/      { compute=$2 }
+            /^allreduce_s:/    { reduce=$2 }
+            /^allgatherv_s:/   { gather=$2 }
+            /^edge_imbalance:/ { imbalance=$2 }
+            /^rank_sum:/       { total=$2 }
+            /^residual:/       { residual=$2 }
+            END {
+                if (time == "" || compute == "" || reduce == "" ||
+                    gather == "" || imbalance == "" ||
+                    total == "" || residual == "") exit 1
+                print ranks "," run "," time "," compute "," reduce "," gather "," imbalance "," total "," residual
+            }
+        ' >> "$csv"
+done
+
+echo "result_file=$csv"
+cat "$csv"

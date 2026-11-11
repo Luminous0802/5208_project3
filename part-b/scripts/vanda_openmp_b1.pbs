@@ -1,0 +1,59 @@
+
+#!/bin/bash
+#PBS -q auto_free
+#PBS -l select=1:ncpus=12:mpiprocs=12:mem=20gb
+#PBS -l walltime=01:00:00
+#PBS -j oe
+#PBS -N B1_OpenMP
+
+set -euo pipefail
+
+cd "$PBS_O_WORKDIR"
+
+module load openmpi/gcc/64/4.1.8
+module load git/2.40.0
+
+export OMP_DYNAMIC=FALSE
+export OMP_PROC_BIND=close
+export OMP_PLACES=cores
+
+# Build serially to avoid compiler OOM.
+make -j 1
+
+# Generate one uniform graph.
+mkdir -p work/b1
+./bin/make_graph uniform 100000 800000 20261029 \
+  work/b1/uniform_n100k_e800k.txt
+
+# Create the benchmark manifest.
+python3 - <<'PY'
+import json
+from pathlib import Path
+
+p = Path("work/b1/uniform_n100k_e800k.txt").resolve()
+manifest = [{
+    "graph_id": "uniform_n100k_e800k",
+    "path": str(p),
+    "N": 100000,
+    "E": 800000,
+    "seed": 20261029,
+    "model": "uniform",
+    "experiments": ["E1"]
+}]
+Path("work/b1/manifest.json").write_text(
+    json.dumps(manifest, indent=2)
+)
+PY
+
+# Run OpenMP thread-scaling benchmark.
+python3 scripts/benchmark.py \
+  work/b1/manifest.json \
+  --configs scripts/configs_openmp_only.json \
+  --out results/b1_openmp_${PBS_JOBID%%.*} \
+  --site Vanda \
+  --max-cores 12 \
+  --experiments E1 \
+  --repeats 5 \
+  --K 50
+
+echo "B1 benchmark finished."

@@ -1,0 +1,12 @@
+[
+  {"version":"V0","ranks":1,"threads":1},
+  {"version":"V1","ranks":12,"threads":1},
+  {"version":"V2","ranks":6,"threads":2,"schedule":"static"},
+  {"version":"V2","ranks":6,"threads":2,"schedule":"dynamic","chunk":64},
+  {"version":"V3","ranks":6,"threads":2,"schedule":"static"},
+  {"version":"V3","ranks":6,"threads":2,"schedule":"dynamic","chunk":64},
+  {"version":"V2","ranks":3,"threads":4,"schedule":"static"},
+  {"version":"V3","ranks":3,"threads":4,"schedule":"static"},
+  {"version":"V2","ranks":2,"threads":6,"schedule":"static"},
+  {"version":"V3","ranks":2,"threads":6,"schedule":"static"}
+]

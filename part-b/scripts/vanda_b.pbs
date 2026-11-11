@@ -1,0 +1,40 @@
+#!/bin/bash
+#PBS -q auto_free
+#PBS -l select=1:ncpus=12:mpiprocs=12
+#PBS -l walltime=04:00:00
+#PBS -j oe
+# Based on A's working Vanda OpenMPI module and 12 CPU slots/node.
+# Check the resource syntax against the actual queue before submitting.
+set -euo pipefail
+cd "$PBS_O_WORKDIR"
+module load openmpi/gcc/64/4.1.8
+export OMP_DYNAMIC=FALSE OMP_PROC_BIND=close OMP_PLACES=cores
+: "${MANIFEST:?Set MANIFEST to the generated manifest.json}"
+EXPERIMENTS=${EXPERIMENTS:-E1,E2,E3,E4}
+CONFIGS=${CONFIGS:-scripts/configs_12cores.json}
+REPEATS=${REPEATS:-5}
+slots=$(wc -l < "$PBS_NODEFILE")
+job="${PBS_JOBID%%.*}"
+result_dir="results/vanda_b_${job}"
+mkdir -p "$result_dir"
+hostfile="$PWD/$result_dir/hosts.txt"
+sort "$PBS_NODEFILE" | uniq -c | awk '{print $2 " slots=" $1}' > "$hostfile"
+# A's Vanda installation. Override if cluster administrators change it.
+export MPIEXEC=mpirun
+export MPIEXEC_ARGS="--prefix /cm/shared/apps/openmpi4/gcc/4.1.8 --hostfile $hostfile --map-by slot:PE={threads} --bind-to core --report-bindings"
+{
+  date -u
+  module list 2>&1
+  mpicxx --version
+  mpirun --version
+  cat "$hostfile"
+  lscpu
+  mpirun --hostfile "$hostfile" -np "$slots" --map-by slot --bind-to core hostname
+} > "$result_dir/environment.txt" 2>&1
+# This is a fresh compile on the cluster, not the Mac executables.
+build_dir="$PWD/work/build_${job}/bin"
+make BIN="$build_dir" -j 1 > "$result_dir/build.log" 2>&1
+python3 scripts/benchmark.py "$MANIFEST" --configs "$CONFIGS" \
+  --bin-dir "$build_dir" --site Vanda --max-cores "$slots" --experiments "$EXPERIMENTS" \
+  --repeats "$REPEATS" --K 50 --out "$result_dir"
+python3 scripts/summarize.py "$result_dir/runs.csv" --out "$result_dir/summary.csv"
